@@ -12,3 +12,5 @@ Thank you to these contributors who helped make this component even better!
 
 * @cmccambridge
 * @hanscats
+* @ireneybean
+* @seganku
