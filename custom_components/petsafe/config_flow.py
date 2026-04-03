@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.httpx_client import get_async_client
 
 import petsafe
 
@@ -114,7 +115,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
 
     async def get_email_code(self, email: str):
-        self._client = petsafe.PetSafeClient(email=email)
+        self._client = petsafe.PetSafeClient(
+            email=email, client=get_async_client(self.hass)
+        )
         await self._client.request_code()
         return True
 
