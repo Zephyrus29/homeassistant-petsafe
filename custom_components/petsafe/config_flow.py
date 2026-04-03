@@ -64,7 +64,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data = user_input
                 return await self.async_step_code()
             except petsafe.client.InvalidUserException as err:
-                _LOGGER.debug("PetSafe reported invalid user email", exc_info=err)
+                _LOGGER.error(
+                    "PetSafe reported invalid user email", exc_info=True
+                )
                 errors[CONF_EMAIL] = "invalid_user"
             except Exception:
                 errors[CONF_BASE] = "cannot_connect"
