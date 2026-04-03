@@ -1,6 +1,7 @@
 """Config flow for PetSafe Integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import homeassistant.helpers.config_validation as cv
@@ -20,6 +21,8 @@ from homeassistant.helpers.httpx_client import get_async_client
 import petsafe
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_EMAIL): str})
 STEP_CODE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
@@ -60,7 +63,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.get_email_code(user_input[CONF_EMAIL])
                 self.data = user_input
                 return await self.async_step_code()
-            except petsafe.client.InvalidUserException:
+            except petsafe.client.InvalidUserException as err:
+                _LOGGER.debug("PetSafe reported invalid user email", exc_info=err)
                 errors[CONF_EMAIL] = "invalid_user"
             except Exception:
                 errors[CONF_BASE] = "cannot_connect"
@@ -115,6 +119,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
 
     async def get_email_code(self, email: str):
+        # Normalize user input: Cognito usernames are email addresses and should
+        # not include whitespace or be case-sensitive.
+        email = email.strip().lower()
         self._client = petsafe.PetSafeClient(
             email=email, client=get_async_client(self.hass)
         )
